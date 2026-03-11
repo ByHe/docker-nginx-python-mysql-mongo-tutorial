@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Create</title>
+</head>
+<body>
+   <h1>Create</h1>
+ 
+   <form id="userForm">
+  	<label>Namn</label><br>
+  	<input type="text" name="name"><br>
+
+
+  	<label>mail</label><br>
+  	<input type="email" name="email"><br>
+ 
+  	<input type="submit" value="Skapa Ny Användare">
+   </form>
+   <output id="data"></output>
+</body>
+<script>
+   const userForm = document.getElementById('userForm')
+   userForm.addEventListener('submit', createUser)
+
+
+   async function createUser(e) {
+  	e.preventDefault() // Stoppar formuläret från att ladda om sidan.
+  	
+  	const formData = new FormData(userForm)
+  	const data = new URLSearchParams(formData)
+
+
+  	const response = await fetch('http://localhost:5000/api/users', {
+     	   method: "POST",
+     	   body: data
+  	})
+  	const result = await response.json()
+
+
+  	console.log("result: " + result.success)
+
+
+      if(result.success)
+         getUsers()
+   }
+ 
+   async function getUsers() {
+  	const response = await fetch('http://localhost:5000/api/users')
+  	const users = await response.json()
+  	document.getElementById('data').innerText = JSON.stringify(users)
+   }
+</script>
+</html>

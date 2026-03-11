@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title></title>Delete</title>
+</head>
+<body>
+   <h1>Ta bort användare</h1>
+   <form id="deleteForm">
+   <label>AnvändarID</label><br>
+   <input type="number" name="uid"><br>
+
+
+   <input type="submit" value="Radera">
+</form>
+<output id="data"></output>
+</body>
+<script>
+   const deleteForm = document.getElementById('deleteForm')
+   deleteForm.addEventListener('submit', deleteUser)
+
+
+   async function deleteUser(e) {
+      e.preventDefault(deleteForm) 
+
+
+      const formData = new FormData(deleteForm)
+      const data = new URLSearchParams(formData)
+
+
+      const response = await fetch('http://localhost:5000/api/users', {
+         method: "DELETE",
+         body: data
+      })
+      const result = await response.json()
+
+
+      console.log("result: " + result.success)
+
+
+      if (result.success)
+         getUsers()
+   }
+
+
+   async function getUsers() {
+      const response = await fetch('http://localhost:5000/api/users')
+      const users = await response.json()
+
+
+      document.getElementById('data').innerText = JSON.stringify(users)
+   }
+</script>
+</html>

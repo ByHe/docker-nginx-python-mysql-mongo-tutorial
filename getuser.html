@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="sv">
+
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Read</title>
+</head>
+
+<body>
+   <h1>Read</h1>
+
+   <select id="userList">
+   </select>
+
+   <output id="data"></output>
+</body>
+<script>
+   const select = document.getElementById('userList')
+   select.addEventListener("change", getUser)
+
+   async function getUser(e) {
+      const selection = document.getElementById('userList')
+      const uid = e.target.value;
+
+      const response = await fetch('http://localhost:5000/api/users/' + uid)
+      const user = await response.json()
+
+      document.getElementById('data').innerText = JSON.stringify(user)
+   }
+
+   async function getUsers() {
+      const selection = document.getElementById('userList')
+
+      const response = await fetch('http://localhost:5000/api/users')
+      const users = await response.json()
+
+      users.forEach(user => {
+         const option = document.createElement('option')
+         option.value = user.uid
+         option.innerText = user.name
+         selection.appendChild(option)
+      });
+   }
+
+   getUsers();
+</script>
+
+</html>
