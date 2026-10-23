@@ -1,58 +1,41 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from .connect import getDB
+import bcrypt
 
 router = Blueprint('router', __name__)
 
-# Returnerar länder i Europa.
-@router.route('/countries', methods=['GET'])
-def get_countries_in_europe():
-    db = getDB()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM country WHERE Continent='Europe' ORDER BY Name")
-    rows = cursor.fetchall()
-  
-    cursor.close()
-    db.close()
-    
-    return jsonify(rows)
+@router.route('/users', methods=['POST'])
+def create_user():
+    result = {'success': False}
+    cost = 10
 
-# Returnerar länder i vald kontinent.
-@router.route('/countries/<continent>', methods=['GET'])
-def get_countries_by_continent(continent):
-    db = getDB()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM country WHERE Continent=%s ORDER BY Name", (continent,))
-    rows = cursor.fetchall()
+    data = request.get_json()
+    first_name = data.get('firstName')
+    sur_name = data.get('surName')
+    user_name = data.get('userName')
+    password = data.get('password')
 
-    cursor.close()
-    db.close()
-    
-    return jsonify(rows)
+    try:
+        # Hasha lösenordet med bcrypt (motsvarar bcrypt.hash i Node.js)
+        salt = bcrypt.gensalt(rounds=cost)
+        password_hash = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
-# Returnerar land med vald landskod.
-@router.route('/country/<code>', methods=['GET'])
-def get_country_by_code(code):
-    db = getDB()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM country WHERE Code = %s", (code,))
-    rows = cursor.fetchall()
-    
-    cursor.close()
-    db.close()
-    
-    return jsonify(rows)
+        db = getDB()
+        cursor = db.cursor()
+        
+        # SQL-fråga för att lägga till användare (UUID() genererar uid direkt i MariaDB)
+        sql = "INSERT INTO user(uid, firstname, surname, username, password) VALUES(UUID(), %s, %s, %s, %s)"
+        cursor.execute(sql, (first_name, sur_name, user_name, password_hash))
+        
+        db.commit()
+        cursor.close()
+        db.close()
+        
+        result['success'] = True
+    except Exception as err:
+        print(err)
 
-# Returnerar städer i land med vald landskod."
-@router.route('/cities/<code>', methods=['GET'])
-def get_cities_by_country_code(code):
-    db = getDB()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM city WHERE CountryCode = %s", (code,))
-    rows = cursor.fetchall()
-    
-    cursor.close()
-    db.close()
-    return jsonify(rows)
+    return jsonify(result)
 
 # Fångar upp övriga anrop.
 @router.route('/', defaults={'path': ''}, methods=['GET'])
